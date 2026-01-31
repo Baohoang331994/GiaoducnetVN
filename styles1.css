@@ -1,0 +1,207 @@
+/* ===================================================
+   🎓 EDUCATION PREMIUM UI – MOBILE FIRST
+   Đổi màu trường học tại :root
+=================================================== */
+
+/* ===== MÀU TRƯỜNG HỌC (TÙY CHỈNH NHANH) ===== */
+:root {
+    --school-primary: #2563eb;   /* Màu chính (xanh trường) */
+    --school-secondary: #22c55e; /* Màu phụ */
+    --school-accent: #facc15;    /* Nhấn (sao, huy hiệu) */
+
+    --bg-gradient: linear-gradient(
+        135deg,
+        #2563eb,
+        #22c55e
+    );
+
+    --text-dark: #1f2937;
+    --text-light: #6b7280;
+}
+
+/* ===== RESET ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Segoe UI", Roboto, system-ui, sans-serif;
+}
+
+body {
+    min-height: 100vh;
+    background: var(--bg-gradient);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 16px;
+}
+
+/* ===== CONTAINER (GLASS EFFECT) ===== */
+.container {
+    width: 100%;
+    max-width: 420px;
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(14px);
+    border-radius: 20px;
+    box-shadow:
+        0 25px 50px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+    animation: zoomIn 0.5s ease;
+}
+
+/* ===== BOX ===== */
+.login-box,
+.register-box {
+    padding: 28px 24px 32px;
+}
+
+/* ===== TIÊU ĐỀ ===== */
+h2 {
+    text-align: center;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.subtitle {
+    text-align: center;
+    font-size: 14px;
+    color: var(--text-light);
+    margin-top: 6px;
+    margin-bottom: 26px;
+}
+#form-errors {
+    margin-top: 6px;
+}
+
+.error-text {
+    color: #dc2626;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    line-height: 1.3;
+    margin: 0;
+    display: none; /* Ẩn hoàn toàn khi không có lỗi */
+}
+.success-text {
+    color: #16a34a;
+    font-size: 14px;
+    font-weight: 700;
+    text-align: center;
+    margin-top: 6px;
+    display: none;
+}
+
+/* ===== FORM ===== */
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 6px;
+    margin-top: 14px;
+}
+
+/* ===== INPUT – DỄ DÙNG CHO HỌC SINH ===== */
+input {
+    padding: 14px 16px;
+    border-radius: 14px;
+    border: 2px solid #e5e7eb;
+    font-size: 15px;
+    background: #f9fafb;
+    transition: all 0.25s ease;
+}
+
+input::placeholder {
+    color: #9ca3af;
+}
+
+input:focus {
+    outline: none;
+    border-color: var(--school-primary);
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+}
+
+/* ===== BUTTON – TO, DỄ BẤM ===== */
+button {
+    margin-top: 28px;
+    padding: 15px;
+    border-radius: 16px;
+    border: none;
+    background: linear-gradient(
+        135deg,
+        var(--school-primary),
+        var(--school-secondary)
+    );
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 25px rgba(37, 99, 235, 0.35);
+}
+
+button:active {
+    transform: scale(0.97);
+}
+
+/* ===== LINK CHUYỂN FORM ===== */
+.toggle-link {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 14px;
+    color: var(--text-light);
+}
+
+.toggle-link-btn {
+    color: var(--school-primary);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.toggle-link-btn:hover {
+    text-decoration: underline;
+}
+
+/* ===== ANIMATION ===== */
+@keyframes zoomIn {
+    from {
+        opacity: 0;
+        transform: scale(0.92);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* ===================================================
+   📱 MOBILE RIÊNG CHO HỌC SINH
+=================================================== */
+@media (max-width: 480px) {
+
+    h2 {
+        font-size: 22px;
+    }
+
+    .subtitle {
+        font-size: 13px;
+    }
+
+    input {
+        font-size: 16px; /* chống zoom iOS */
+    }
+
+    button {
+        font-size: 17px;
+    }
+}
