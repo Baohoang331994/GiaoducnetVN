@@ -153,7 +153,29 @@ button:hover {
 button:active {
     transform: scale(0.97);
 }
+/* Loading spinner trong button */
+.loading-spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 3px solid #ffffff;          /* Màu viền spinner - thay đổi theo theme của bạn */
+    border-top: 3px solid transparent;  /* Phần trên trong suốt để tạo hiệu ứng xoay */
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-right: 8px;
+    vertical-align: middle;
+}
 
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Optional: Làm mờ button khi loading */
+button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
 /* ===== LINK CHUYỂN FORM ===== */
 .toggle-link {
     text-align: center;

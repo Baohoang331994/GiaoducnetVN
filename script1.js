@@ -1,5 +1,10 @@
 // ==================================================
-// LẤY PHẦN TỬ
+// BIẾN TOÀN CỤC & CẤU HÌNH
+// ==================================================
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyzAzKxL6U6ID3cnhvBJRg8OK__CCfWCq6Z8xe73PAFPK7u5V186cytlM7n3YNSNN0j9A/exec';  // Thay bằng URL /exec thật
+
+// ==================================================
+// LẤY PHẦN TỬ DOM
 // ==================================================
 const emailInput       = document.getElementById('email');
 const usernameInput    = document.getElementById('username-reg');
@@ -16,11 +21,8 @@ successMsg.className = 'success-text';
 successMsg.style.display = 'none';
 formErrors.appendChild(successMsg);
 
-// URL Apps Script Web App (thay bằng URL thật của bạn)
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyzAzKxL6U6ID3cnhvBJRg8OK__CCfWCq6Z8xe73PAFPK7u5V186cytlM7n3YNSNN0j9A/exec';
-
 // ==================================================
-// HÀM HIỂN THỊ
+// HÀM HIỂN THỊ THÔNG BÁO
 // ==================================================
 function showMessage(el, message) {
     el.textContent = message;
@@ -34,13 +36,13 @@ function clearMessages() {
 }
 
 // ==================================================
-// VALIDATE
+// VALIDATE EMAIL
 // ==================================================
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 function validateEmail() {
     const value = emailInput?.value.trim() || '';
-    if (!value) return true; // optional nếu bạn muốn
+    if (!value) return true;
 
     if (!emailRegex.test(value)) {
         showMessage(emailError, '❌ Email không đúng định dạng!');
@@ -50,6 +52,9 @@ function validateEmail() {
     return true;
 }
 
+// ==================================================
+// VALIDATE PASSWORD
+// ==================================================
 function validatePassword() {
     const pwd = pwdInput?.value || '';
     const confirm = confirmPwdInput?.value || '';
@@ -69,7 +74,7 @@ function validatePassword() {
 }
 
 // ==================================================
-// REALTIME VALIDATE (tùy chọn)
+// REALTIME VALIDATION
 // ==================================================
 emailInput?.addEventListener('input', () => {
     clearMessages();
@@ -87,58 +92,120 @@ confirmPwdInput?.addEventListener('input', () => {
 });
 
 // ==================================================
-// SUBMIT FORM ĐĂNG KÝ
+// TẢI DANH SÁCH USERNAME TỪ CỘT A BẰNG JSONP (GỌI KHI SUBMIT)
+// ==================================================
+function loadUsernamesJSONP() {
+    return new Promise((resolve, reject) => {
+        const callbackName = 'jsonpCallback_' + Date.now();
+        const params = new URLSearchParams({
+            callback: callbackName,
+            range: 'A2:A'  // Chỉ tải cột A từ dòng 2
+        });
+
+        const url = `${SCRIPT_URL}?${params.toString()}`;
+
+        const script = document.createElement('script');
+        script.src = url;
+        script.async = true;
+
+        window[callbackName] = function(data) {
+            if (data && Array.isArray(data)) {
+                const usernames = data
+                    .map(v => (v || '').toString().trim().toLowerCase())
+                    .filter(v => v);
+                console.log(`Đã tải ${usernames.length} tên tài khoản`);
+                resolve(usernames);
+            } else if (data && data.error) {
+                reject(new Error(data.error));
+            } else {
+                reject(new Error('Dữ liệu từ server không hợp lệ'));
+            }
+
+            document.body.removeChild(script);
+            delete window[callbackName];
+        };
+
+        script.onerror = () => {
+            reject(new Error('Lỗi tải danh sách tài khoản từ server'));
+            document.body.removeChild(script);
+            delete window[callbackName];
+        };
+
+        document.body.appendChild(script);
+    });
+}
+
+// ==================================================
+// XỬ LÝ SUBMIT FORM ĐĂNG KÝ + LOADING SPINNER TRONG BUTTON
 // ==================================================
 document.getElementById('registerForm')?.addEventListener('submit', async function(e) {
-    e.preventDefault();           // Ngăn reload trang
+    e.preventDefault();
     clearMessages();
 
-    const emailOk    = validateEmail();
-    const pwdOk      = validatePassword();
+    const emailOk = validateEmail();
+    const pwdOk   = validatePassword();
 
-    if (!emailOk || !pwdOk) {
-        return; // dừng nếu lỗi
-    }
+    if (!emailOk || !pwdOk) return;
 
-    // Thu thập dữ liệu
-    const data = {
-        username: usernameInput?.value.trim() || '',
-        password: pwdInput.value,                // plaintext (chỉ test, production nên hash)
-        email:    emailInput.value.trim()
-    };
-
-    // Hiển thị loading (tùy chọn)
     const submitBtn = this.querySelector('button[type="submit"]');
-    const originalText = submitBtn.textContent;
+    const originalText = submitBtn.innerHTML;  // Lưu nội dung gốc (text + có thể icon)
+
+    // Thêm spinner và disable button
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Đang gửi...';
+    submitBtn.innerHTML = `
+        <span class="loading-spinner"></span> Đang kiểm tra...
+    `;
 
     try {
-        const response = await fetch(SCRIPT_URL, {
+        // 1. Tải danh sách username mới nhất
+        submitBtn.innerHTML = `<span class="loading-spinner"></span> Đang kiểm tra...`;
+        const usernames = await loadUsernamesJSONP();
+
+        // 2. Kiểm tra trùng
+        const newUsername = usernameInput.value.trim().toLowerCase();
+        if (usernames.includes(newUsername)) {
+            showMessage(pwdError, '❌ Tên tài khoản đã tồn tại! Vui lòng chọn tên khác.');
+            return;
+        }
+
+        // 3. Không trùng → gửi POST
+        submitBtn.innerHTML = `<span class="loading-spinner"></span> Đang đăng ký...`;
+
+        const data = {
+            username: usernameInput.value.trim(),
+            password: pwdInput.value,
+            email: emailInput.value.trim()
+        };
+
+        await fetch(SCRIPT_URL, {
             method: 'POST',
-            mode: 'no-cors',                    // Bắt buộc vì GAS không hỗ trợ CORS đầy đủ
+            mode: 'no-cors',
             headers: {
-                'Content-Type': 'text/plain;charset=utf-8'  // Tránh preflight OPTIONS
+                'Content-Type': 'text/plain;charset=utf-8'
             },
             body: JSON.stringify(data)
         });
 
-        // no-cors → không đọc response được, nhưng nếu không throw error → coi như OK
-        showMessage(successMsg, '🎉 Đăng ký thành công! Dữ liệu đã được lưu.');
-        this.reset();                   // Xóa form
-        setTimeout(showLogin, 1500);    // Chuyển về login sau 1.5s
+        // Thành công
+        showMessage(successMsg, '🎉 Đăng ký thành công! Tài khoản đã được tạo.');
+        this.reset();
+        setTimeout(() => {
+            document.querySelector('.register-box').style.display = 'none';
+            document.querySelector('.login-box').style.display = 'block';
+        }, 1500);
 
     } catch (err) {
-        console.error('Lỗi gửi dữ liệu:', err);
-        showMessage(pwdError, '❌ Có lỗi khi gửi dữ liệu. Vui lòng thử lại!');
+        console.error('Lỗi trong quá trình đăng ký:', err);
+        showMessage(pwdError, '❌ Có lỗi xảy ra: ' + (err.message || 'Kết nối thất bại. Vui lòng thử lại!'));
     } finally {
+        // Khôi phục button
         submitBtn.disabled = false;
-        submitBtn.textContent = originalText;
+        submitBtn.innerHTML = originalText;  // Trở về text gốc "Đăng ký"
     }
 });
 
 // ==================================================
-// CHUYỂN FORM (giữ nguyên)
+// CHUYỂN ĐỔI GIỮA LOGIN & REGISTER
 // ==================================================
 function showRegister() {
     document.querySelector('.login-box').style.display = 'none';
